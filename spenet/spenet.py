@@ -3,15 +3,14 @@ import networkx as nx
 import numpy as np
 import numpy.linalg as LA
 from scipy.sparse import csr_matrix, csc_matrix
-import slq
 from slq_fast import slq
 
 
-def slq_spenet_naive(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
+def slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian"):
     """
     input:
         G       : Networkx graph
-        k       :
+        ks       : list of k
         step    :
         nv      : random vector number
     output:
@@ -24,20 +23,20 @@ def slq_spenet_naive(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
     elif Gtype == "adjacency":
         L = nx.adjacency_matrix(G)
 
-    def f(x): return np.power(x, k)
-    return slq.slq(L.astype(np.float32), step, nv, f)
+    if type(ks) == int:
+        ks = [ks]
+
+    def make_power_function(k):
+        return lambda x: np.power(x, k)
+    f = [make_power_function(k) for k in ks]
+
+    if len(ks) == 1:
+        return slq(L.astype(np.float32), step, nv, f).flatten()[0]
+    else:
+        return slq(L.astype(np.float32), step, nv, f).flatten()
 
 
-def slq_spenet(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
-    """
-    input:
-        G       : Networkx graph
-        k       :
-        step    :
-        nv      : random vector number
-    output:
-        sum of k-th powers of eigenvalues of Network
-    """
+def exact_spenet(G, ks, Gtype="normalized_laplacian"):
     if Gtype == "normalized_laplacian":
         L = nx.normalized_laplacian_matrix(G)
     elif Gtype == "laplacian":
@@ -45,23 +44,32 @@ def slq_spenet(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
     elif Gtype == "adjacency":
         L = nx.adjacency_matrix(G)
 
-    f = [lambda x: np.power(x, k)]
-    return slq(L.astype(np.float32), step, nv, f)[0, 0]
+    if type(ks) == int:
+        ks = [ks]
+    answers = []
+    for k in ks:
+        e = LA.eigvals(L.astype(np.float32).A)
+        answers.append(np.power(e, k).sum())
 
-
-def exact_spenet(G, k, Gtype="normalized_laplacian"):
-    if Gtype == "normalized_laplacian":
-        L = nx.normalized_laplacian_matrix(G)
-    elif Gtype == "laplacian":
-        L = nx.laplacian_matrix(G)
-    elif Gtype == "adjacency":
-        L = nx.adjacency_matrix(G)
-    e = LA.eigvals(L.astype(np.float32).A)
-    return np.power(e, k).sum()
+    if len(ks) == 1:
+        return answers[0]
+    else:
+        return answers
 
 
 if __name__ == "__main__":
-    G = nx.fast_gnp_random_graph(100, 0.2)
-    Gtype = "adjacency"
-    for k in range(1, 10):
-        print(f"k {k},  slq:{slq_spenet(G, k=k, nv=100, Gtype=Gtype)}  , exact:{exact_spenet(G,k, Gtype=Gtype)}")
+    print("generating graph...")
+    N = 10000
+    M = 100000
+    G = nx.gnm_random_graph(N, M)
+    ks = [2, 3, 4, 5]
+    print("ks:", ks)
+    print("start")
+    approx = slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian")
+    print("Big graph: ", approx)
+
+    ks = 2
+    print("ks:", ks)
+    print("start")
+    approx = slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian")
+    print("Big graph: ", approx)

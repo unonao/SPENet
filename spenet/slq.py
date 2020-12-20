@@ -75,3 +75,24 @@ def slq(A, step, nv, f):
         ts = vs[0]  # frist elements of eigenvectors
         sum_of_gauss_quadrature += np.dot((ts**2), f(w))  # sum(t**2 f(eigenval))
     return (N/nv)*sum_of_gauss_quadrature
+
+
+def slq_spenet_naive(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
+    """
+    input:
+        G       : Networkx graph
+        k       :
+        step    :
+        nv      : random vector number
+    output:
+        sum of k-th powers of eigenvalues of Network
+    """
+    if Gtype == "normalized_laplacian":
+        L = nx.normalized_laplacian_matrix(G)
+    elif Gtype == "laplacian":
+        L = nx.laplacian_matrix(G)
+    elif Gtype == "adjacency":
+        L = nx.adjacency_matrix(G)
+
+    def f(x): return np.power(x, k)
+    return slq(L.astype(np.float32), step, nv, f)

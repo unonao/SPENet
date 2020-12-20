@@ -45,4 +45,4 @@ def normalize_vec(v):
 
 
 def relative_error(pred, true):
-    return abs(pred-true)/true
+    return np.abs(pred-true)/true
