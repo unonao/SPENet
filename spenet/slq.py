@@ -4,7 +4,7 @@ Stochastic Lanczos Quadrature(SLQ)
 import networkx as nx
 import numpy as np
 import numpy.linalg as LA
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 from utils import normalize_vec, random_vec
 
 
@@ -24,7 +24,8 @@ def lanczos(A, v, m):
     if m > n:  # if n is small
         m = n
 
-    V = np.zeros((m, n))
+    A = csr_matrix(A)  # each rows
+    V = np.zeros((n, m))
     T = np.zeros((m, m))
     V[:, 0] = v
 
@@ -74,42 +75,3 @@ def slq(A, step, nv, f):
         ts = vs[0]  # frist elements of eigenvectors
         sum_of_gauss_quadrature += np.dot((ts**2), f(w))  # sum(t**2 f(eigenval))
     return (N/nv)*sum_of_gauss_quadrature
-
-
-def slq_spenet(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
-    """
-    input:
-        G       : Networkx graph
-        k       :
-        step    :
-        nv      : random vector number
-    output:
-        sum of k-th powers of eigenvalues of Network
-    """
-    if Gtype == "normalized_laplacian":
-        L = nx.normalized_laplacian_matrix(G)
-    elif Gtype == "laplacian":
-        L = nx.laplacian_matrix(G)
-    elif Gtype == "adjacency":
-        L = nx.adjacency_matrix(G)
-
-    def f(x): return np.power(x, k)
-    return slq(L, step, nv, f)
-
-
-def exact_spenet(G, k, Gtype="normalized_laplacian"):
-    if Gtype == "normalized_laplacian":
-        L = nx.normalized_laplacian_matrix(G)
-    elif Gtype == "laplacian":
-        L = nx.laplacian_matrix(G)
-    elif Gtype == "adjacency":
-        L = nx.adjacency_matrix(G)
-    e = LA.eigvals(L.A)
-    return np.power(e, k).sum()
-
-
-if __name__ == "__main__":
-    G = nx.complete_graph(10)
-    Gtype = "laplacian"
-    for k in range(1, 10):
-        print(f"k {k},  slq:{slq_spenet(G, k=k, nv=1000, Gtype=Gtype)}  , exact:{exact_spenet(G,k, Gtype=Gtype)}")

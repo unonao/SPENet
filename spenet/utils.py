@@ -9,7 +9,7 @@ def random_vec(n, type="stdnorm"):
     output:
         random vector that follows rademacher distribution & std normal distribution
     example:
-        [1,1,-1,1,-1,-1,-1,1,-1,1]
+        "randmacher" : [1,1,-1,1,-1,-1,-1,1,-1,1]
     """
     if type == "stdnorm":
         return np.random.standard_normal(n)
@@ -42,3 +42,7 @@ def normalize_vec(v):
     if l2 == 0:
         l2 = 1
     return v/l2
+
+
+def relative_error(pred, true):
+    return abs(pred-true)/true

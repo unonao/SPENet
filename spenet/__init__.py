@@ -1,2 +1,2 @@
-from spenet.slq import lanczos
+from spenet.slq import *
 from spenet.utils import *
