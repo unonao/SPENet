@@ -4,9 +4,10 @@ import numpy as np
 import scipy
 from scipy.sparse import csr_matrix, csc_matrix
 from slq_fast import slq
+import os
 
 
-def slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian"):
+def slq_spenet(G, ks=3, step=10, nv=100, Gtype="normalized_laplacian"):
     """
     input:
         G       : Networkx graph
@@ -30,13 +31,28 @@ def slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian"):
         return lambda x: np.power(x, k)
     f = [make_power_function(k) for k in ks]
 
-    if len(ks) == 1:
-        return slq(L.astype(np.float32), step, nv, f).flatten()[0]
-    else:
-        return slq(L.astype(np.float32), step, nv, f).flatten()
+    return slq(L.astype(np.float32), step, nv, f).flatten()
 
 
-def exact_spenet(G, ks, Gtype="normalized_laplacian"):
+def exact_spenet_by_path(graph_path, ks=3, Gtype="normalized_laplacian"):
+    if Gtype == "normalized_laplacian":
+        eig_path = graph_path + ".normalized.eigs"
+    elif Gtype == "laplacian":
+        eig_path = graph_path + ".laplacian.eigs"
+    elif Gtype == "adjacency":
+        eig_path = graph_path + ".adjacency.eigs"
+
+    if type(ks) == int:
+        ks = [ks]
+    answers = []
+    e = np.loadtxt(eig_path).flatten()
+    for k in ks:
+        answers.append(np.power(e, k).sum())
+
+    return answers
+
+
+def exact_spenet(G, ks=3, Gtype="normalized_laplacian"):
     if Gtype == "normalized_laplacian":
         L = nx.normalized_laplacian_matrix(G)
     elif Gtype == "laplacian":
@@ -47,14 +63,11 @@ def exact_spenet(G, ks, Gtype="normalized_laplacian"):
     if type(ks) == int:
         ks = [ks]
     answers = []
+    e = scipy.linalg.eigvalsh(L.astype(np.float32).todense())
     for k in ks:
-        e = scipy.linalg.eigvalsh(L.astype(np.float32).todense())
         answers.append(np.power(e, k).sum())
 
-    if len(ks) == 1:
-        return answers[0]
-    else:
-        return answers
+    return answers
 
 
 if __name__ == "__main__":
