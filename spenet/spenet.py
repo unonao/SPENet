@@ -1,7 +1,7 @@
 
 import networkx as nx
 import numpy as np
-import numpy.linalg as LA
+import scipy
 from scipy.sparse import csr_matrix, csc_matrix
 from slq_fast import slq
 
@@ -48,7 +48,7 @@ def exact_spenet(G, ks, Gtype="normalized_laplacian"):
         ks = [ks]
     answers = []
     for k in ks:
-        e = LA.eigvals(L.astype(np.float32).A)
+        e = scipy.linalg.eigvalsh(L.astype(np.float32).todense())
         answers.append(np.power(e, k).sum())
 
     if len(ks) == 1:
