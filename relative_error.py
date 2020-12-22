@@ -26,42 +26,39 @@ def spe_relative_error(G, ks, s, nv, Gtype="normalized_laplacian", avr_times=10,
     return errors.mean()
 
 
-# for check
-def print_relative_error(path, ks, s, nv, is_weighted):
-    G = load_graph(path, is_weighted)
-    N = G.number_of_nodes()
-    M = G.number_of_edges()
-    Gtypes = ["normalized_laplacian", "laplacian", "adjacency"]
-    for Gtype in Gtypes:
-        print("gtype:", Gtype)
-        error = spe_relative_error(G, ks, s, nv, Gtype=Gtype, graph_path=path)
-        for i, k in enumerate(ks):
-            print(f"relative error:{error}")
-    print()
-
-
-def print_error_each_graph(graphs, ks, s, nv, is_weighted):
-    for path in graphs:
-        print("path:", path)
-        print("loading graph...")
+if __name__ == "__main__":
+    # for check
+    def print_relative_error(path, ks, s, nv, is_weighted):
         G = load_graph(path, is_weighted)
         N = G.number_of_nodes()
         M = G.number_of_edges()
-        print(f"N:{N}, M:{M}")
-        print("start")
-        print_relative_error(path, ks, s, nv, is_weighted)
         Gtypes = ["normalized_laplacian", "laplacian", "adjacency"]
         for Gtype in Gtypes:
             print("gtype:", Gtype)
-            approx = slq_spenet(G, ks, step=s, nv=nv, Gtype=Gtype)
-            exact = exact_spenet(G, ks, Gtype=Gtype, graph_path=path)
-            error = relative_error(approx, exact)
+            error = spe_relative_error(G, ks, s, nv, Gtype=Gtype, graph_path=path)
             for i, k in enumerate(ks):
-                print(f"k:{k}\tslq:{approx[i]},\texact:{exact[i]},\trelative error:{error[i]}")
+                print(f"relative error:{error}")
         print()
 
-
-if __name__ == "__main__":
+    def print_error_each_graph(graphs, ks, s, nv, is_weighted):
+        for path in graphs:
+            print("path:", path)
+            print("loading graph...")
+            G = load_graph(path, is_weighted)
+            N = G.number_of_nodes()
+            M = G.number_of_edges()
+            print(f"N:{N}, M:{M}")
+            print("start")
+            print_relative_error(path, ks, s, nv, is_weighted)
+            Gtypes = ["normalized_laplacian", "laplacian", "adjacency"]
+            for Gtype in Gtypes:
+                print("gtype:", Gtype)
+                approx = slq_spenet(G, ks, step=s, nv=nv, Gtype=Gtype)
+                exact = exact_spenet(G, ks, Gtype=Gtype, graph_path=path)
+                error = relative_error(approx, exact)
+                for i, k in enumerate(ks):
+                    print(f"k:{k}\tslq:{approx[i]},\texact:{exact[i]},\trelative error:{error[i]}")
+            print()
 
     ks = [4]
     s = 10
