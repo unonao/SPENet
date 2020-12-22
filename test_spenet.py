@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import numpy.linalg as LA
 from scipy.sparse import csr_matrix
-from utils import relative_error
+from relative_error import relative_error
 from spenet import slq_spenet, exact_spenet
 
 if __name__ == "__main__":

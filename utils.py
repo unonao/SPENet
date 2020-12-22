@@ -44,7 +44,6 @@ weighted_graphs = ["data/networkrepository/bio/bio-CE-GT/bio-CE-GT.edges",
                    "data/networkrepository/bio/bio-CE-LC/bio-CE-LC.edges",
                    "data/networkrepository/bio/bio-DM-LC/bio-DM-LC.edges",
                    "data/networkrepository/bio/bio-SC-TS/bio-SC-TS.edges",
-                   "data/networkrepository/miscellaneous/bcsstm04/bcsstm04.mtx",
                    "data/networkrepository/miscellaneous/eco-florida/eco-florida.edges",
                    "data/networkrepository/miscellaneous/eco-foodweb-baydry/eco-foodweb-baydry.edges",
                    "data/networkrepository/miscellaneous/gre_115/gre_115.mtx",
@@ -54,7 +53,8 @@ weighted_graphs = ["data/networkrepository/bio/bio-CE-GT/bio-CE-GT.edges",
                    "data/networkrepository/miscellaneous/misc-football/misc-football.mtx",
                    "data/networkrepository/miscellaneous/rw136/rw136.mtx",
                    "data/networkrepository/miscellaneous/TF10/TF10.mtx",
-                   "data/networkrepository/miscellaneous/Trefethen_150/Trefethen_150.mtx"
+                   "data/networkrepository/miscellaneous/Trefethen_150/Trefethen_150.mtx",
+                   "data/networkrepository/miscellaneous/Trefethen_200b/Trefethen_200b.mtx"
                    ]
 
 
@@ -122,7 +122,3 @@ def normalize_vec(v):
     if l2 == 0:
         l2 = 1
     return v/l2
-
-
-def relative_error(pred, true):
-    return np.abs(pred-true)/true
