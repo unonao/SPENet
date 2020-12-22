@@ -52,22 +52,38 @@ def exact_spenet_by_path(graph_path, ks=3, Gtype="normalized_laplacian"):
     return answers
 
 
-def exact_spenet(G, ks=3, Gtype="normalized_laplacian"):
+def exact_spenet(G, ks=3, Gtype="normalized_laplacian", graph_path=""):
     if Gtype == "normalized_laplacian":
-        L = nx.normalized_laplacian_matrix(G)
+        eig_path = graph_path + ".normalized.eigs"
     elif Gtype == "laplacian":
-        L = nx.laplacian_matrix(G)
+        eig_path = graph_path + ".laplacian.eigs"
     elif Gtype == "adjacency":
-        L = nx.adjacency_matrix(G)
+        eig_path = graph_path + ".adjacency.eigs"
 
-    if type(ks) == int:
-        ks = [ks]
-    answers = []
-    e = scipy.linalg.eigvalsh(L.astype(np.float32).todense())
-    for k in ks:
-        answers.append(np.power(e, k).sum())
+    if os.path.exists(eig_path):  # for rodger
+        if type(ks) == int:
+            ks = [ks]
+        answers = []
+        e = np.loadtxt(eig_path).flatten()
+        for k in ks:
+            answers.append(np.power(e, k).sum())
+        return answers
+    else:
+        if Gtype == "normalized_laplacian":
+            L = nx.normalized_laplacian_matrix(G)
+        elif Gtype == "laplacian":
+            L = nx.laplacian_matrix(G)
+        elif Gtype == "adjacency":
+            L = nx.adjacency_matrix(G)
 
-    return answers
+        if type(ks) == int:
+            ks = [ks]
+        answers = []
+        e = scipy.linalg.eigvalsh(L.astype(np.float32).todense())
+        for k in ks:
+            answers.append(np.power(e, k).sum())
+
+        return answers
 
 
 if __name__ == "__main__":
