@@ -9,7 +9,7 @@ if __name__ == "__main__":
     ks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     gtype = "normalized_laplacian"
 
-    path = "data/networkrepository/animal/aves-weaver-social/aves-weaver-social.edges"
+    path = "data/networkrepository/bio/bio-celegans/bio-celegans.mtx"
 
     print("ks:", ks)
     print("gtype:", gtype)

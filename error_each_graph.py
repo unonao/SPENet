@@ -14,8 +14,8 @@ if __name__ == "__main__":
     graphs = ["as-caida20060911", "as19991115", "Erdos02-cc", "homo-cc", "marvel-chars-cc", "musm-cc", "pgp-cc", "yeast-cc"]
 
     ks = [3]
-    s = 10
-    nv = 100
+    s = 15
+    nv = 200
     print(f"ks:{ks}, s{s}, nv{nv}")
     for graph_name in graphs:
         path = os.path.join("data/graph-eigs-v1/", graph_name+".smat")
