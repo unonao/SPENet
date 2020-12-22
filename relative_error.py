@@ -15,10 +15,10 @@ def relative_error(pred, true):
     return np.abs(pred-true)/true
 
 
-def spe_relative_error(G, ks, s, nv, Gtype="normalized_laplacian", avr_times=10, graph_path=""):
+def spe_relative_error(G, ks, s, nv, Gtype="normalized_laplacian", avg_times=10, graph_path=""):
     np.random.seed(0)
-    errors = np.zeros(avr_times)
-    for i in range(avr_times):
+    errors = np.zeros(avg_times)
+    for i in range(avg_times):
         approx = slq_spenet(G, ks, step=s, nv=nv, Gtype=Gtype)
         exact = exact_spenet(G, ks, Gtype=Gtype, graph_path=graph_path)
         error = relative_error(approx, exact)
