@@ -45,10 +45,10 @@ def lanczos_m(matrix, lanczos_steps,
       with orthogonal rows.
     """
     start_vectors = np.random.randn(matrix.shape[0], nvectors).astype(
-        np.float32)  # Initialize random vectors in columns (n x nvectors).
+        np.float64)  # Initialize random vectors in columns (n x nvectors).
     V = np.zeros((start_vectors.shape[0], lanczos_steps, nvectors),
-                 dtype=np.float32)
-    T = np.zeros((nvectors, lanczos_steps, lanczos_steps), dtype=np.float32)
+                 dtype=np.float64)
+    T = np.zeros((nvectors, lanczos_steps, lanczos_steps), dtype=np.float64)
 
     np.divide(
         start_vectors, np.linalg.norm(start_vectors, axis=0),
@@ -69,7 +69,7 @@ def lanczos_m(matrix, lanczos_steps,
     np.divide(w, beta[None, :], out=w)
     V[:, 1, :] = w
 
-    t = np.zeros((lanczos_steps, nvectors), dtype=np.float32)
+    t = np.zeros((lanczos_steps, nvectors), dtype=np.float64)
 
     # Further Lanczos steps.
     for i in range(1, lanczos_steps):

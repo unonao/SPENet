@@ -95,4 +95,4 @@ def slq_spenet_naive(G, k, step=10, nv=100, Gtype="normalized_laplacian"):
         L = nx.adjacency_matrix(G)
 
     def f(x): return np.power(x, k)
-    return slq(L.astype(np.float32), step, nv, f)
+    return slq(L.astype(np.float64), step, nv, f)
