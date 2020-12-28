@@ -122,3 +122,51 @@ def normalize_vec(v):
     if l2 == 0:
         l2 = 1
     return v/l2
+
+
+"""
+def exact_spenet_rodger(graph_path, ks, Gtype):
+    # for rodger
+    if Gtype == "normalized_laplacian":
+        eig_path = graph_path + ".normalized.eigs"
+    elif Gtype == "laplacian":
+        eig_path = graph_path + ".laplacian.eigs"
+    elif Gtype == "adjacency":
+        eig_path = graph_path + ".adjacency.eigs"
+    if os.path.exists(eig_path):  # for rodger
+        if type(ks) == int:
+            ks = [ks]
+        answers = []
+        e = np.loadtxt(eig_path).flatten()
+        for k in ks:
+            answers.append(np.power(e, k).sum())
+        return answers
+
+"""
+
+
+if __name__ == "__main__":
+
+    is_weighted = False
+
+    for filepath in rodger_graphs:
+        G = load_graph(filepath, is_weighted)
+        N = G.number_of_nodes()
+        M = G.number_of_edges()
+        print(filepath, N, M)
+
+    for filepath in unweighted_graphs:
+        G = load_graph(filepath, is_weighted)
+        N = G.number_of_nodes()
+        M = G.number_of_edges()
+        print(filepath, N, M)
+
+    is_weighted = True
+    for filepath in weighted_graphs:
+        G = load_graph(filepath, is_weighted)
+        N = G.number_of_nodes()
+        M = G.number_of_edges()
+        print(filepath, N, M, max(dict(G.edges).items(), key=lambda x: x[1]['weight'])
+              )
+
+    print(len(weighted_graphs)+len(unweighted_graphs))
