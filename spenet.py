@@ -2,94 +2,120 @@
 import networkx as nx
 import numpy as np
 import scipy
-from scipy.sparse import csr_matrix, csc_matrix
+from scipy.sparse import csr_matrix, csc_matrix, isspmatrix
 from slq_fast import slq
 import os
 
 
-def slq_spenet(G, ks=3, step=10, nv=100, Gtype="normalized_laplacian"):
+def ste_spenet(M, k=3, nv=100, seed=None):
     """
-    input:
-        G       : Networkx graph
-        ks       : list of k
-        step    :
-        nv      : random vector number
-    output:
-        sum of k-th powers of eigenvalues of Network
+    Args:
+        M (dense or sparse matrix)  : real symetric matrix
+        k (int)                     : integer index of power
+        nv (int)                    : random vector number
+        seed (int, optional)                    : random seed
+    Returns:
+        float: approximate sum of k-th powers of eigenvalues of Network
     """
-    if Gtype == "normalized_laplacian":
-        L = nx.normalized_laplacian_matrix(G)
-    elif Gtype == "laplacian":
-        L = nx.laplacian_matrix(G)
-    elif Gtype == "adjacency":
-        L = nx.adjacency_matrix(G)
+    if seed is not None:
+        np.random.seed(seed)
 
-    if type(ks) == int:
-        ks = [ks]
+    M = csc_matrix(M)
+
+    n = M.shape[0]
+    # Initialize random vectors in columns (n x nv).
+    start_vectors = np.random.randn(n, nv).astype(np.float64)
+    np.divide(start_vectors, np.linalg.norm(start_vectors, axis=0),
+              out=start_vectors)  # Normalize each column.
+
+    vs = start_vectors.T
+    for j in range(k):
+        vs = vs @ M
+    vs = np.einsum('ji,ij->j', vs, start_vectors)
+    return n/nv * vs.sum()
+
+
+def slq_spenet(G, k=3, step=10, nv=100, seed=None):
+    """
+    Args:
+        M (dense or sparse matrix)  : real symetric matrix
+        k (int or float, optional)  : index of power
+        step (int, optional)        : step size of Lanczos algorithm
+        nv (int, optional)          : random vector number
+        seed (int, optional)        : random seed
+    Returns:
+        float: approximate sum of k-th powers of eigenvalues of Network
+    """
+    if seed is not None:
+        np.random.seed(seed)
 
     def make_power_function(k):
         return lambda x: np.power(x, k)
-    f = [make_power_function(k) for k in ks]
+    f = [make_power_function(k)]
 
-    return slq(L.astype(np.float64), step, nv, f).flatten()
+    return slq(M, step, nv, f).flatten()[0]
 
 
-def exact_spenet(G, ks=3, Gtype="normalized_laplacian", graph_path="", method="eig"):
-    # for rodger
-    if Gtype == "normalized_laplacian":
-        eig_path = graph_path + ".normalized.eigs"
-    elif Gtype == "laplacian":
-        eig_path = graph_path + ".laplacian.eigs"
-    elif Gtype == "adjacency":
-        eig_path = graph_path + ".adjacency.eigs"
+def exact_spenet(M, k=3, method="eig"):
+    """
+    Args:
+        M (dense or sparse matrix)      : real symetric matrix
+        k (int or float, optional)      : index of power
+        method (:obj:`str`, optional)   : random vector number
+    Returns:
+        float: exact sum of k-th powers of eigenvalues of Network
+    Examples:
+        >>> exact_spenet(np.array([[1,0],[0,1]]), k=3, method="prod")
+        2
+        >>> exact_spenet(np.array([[1,0],[0,2]]), k=2, method="prod")
+        5
+    """
 
-    if os.path.exists(eig_path):  # for rodger
-        if type(ks) == int:
-            ks = [ks]
-        answers = []
-        e = np.loadtxt(eig_path).flatten()
-        for k in ks:
-            answers.append(np.power(e, k).sum())
-        return answers
+    if isspmatrix(M):
+        M = M.todense()
 
-    else:
-        if Gtype == "normalized_laplacian":
-            L = nx.normalized_laplacian_matrix(G)
-        elif Gtype == "laplacian":
-            L = nx.laplacian_matrix(G)
-        elif Gtype == "adjacency":
-            L = nx.adjacency_matrix(G)
-
-        if type(ks) == int:
-            ks = [ks]
-        answers = []
-        """
-        """
-        if method == "eig":
-            e = scipy.linalg.eigvalsh(L.astype(np.float64).todense())
-            for k in ks:
-                answers.append(np.power(e, k).sum())
-            return answers
-        elif method == "prod":
-            for k in ks:
-                A = L.todense()**k
-                answers.append(A.trace().sum())
-            return answers
+    if method == "eig":
+        e = scipy.linalg.eigvalsh(M)
+        return np.power(e, k).sum()
+    elif method == "prod":
+        A = M**k
+        return A.trace().sum()
 
 
 if __name__ == "__main__":
-    print("generating graph...")
-    N = 10000
-    M = 100000
-    G = nx.gnm_random_graph(N, M)
-    ks = [2, 3, 4, 5]
-    print("ks:", ks)
-    print("start")
-    approx = slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian")
-    print("Big graph: ", approx)
+    import doctest
+    doctest.testmod()
 
-    ks = 2
-    print("ks:", ks)
-    print("start")
-    approx = slq_spenet(G, ks, step=10, nv=100, Gtype="normalized_laplacian")
-    print("Big graph: ", approx)
+    ks = [2, 3, 4, 5]
+    step = 10
+    nv = 100
+    seed = 1
+
+    print("generating graph...")
+    N = 100
+    M = 1000
+    G = nx.gnm_random_graph(N, M)
+
+    print("normalized laplacian:")
+    M = nx.normalized_laplacian_matrix(G)
+    for k in ks:
+        print(f"k:{k}")
+        print(f"\t ste:{ste_spenet(M, k, nv=nv, seed=seed)}")
+        print(f"\t slq:{slq_spenet(M, k, step=step, nv=nv, seed=seed)}")
+        print(f"\t exact:{exact_spenet(M, k)}")
+
+    print("laplacian:")
+    M = nx.laplacian_matrix(G)
+    for k in ks:
+        print(f"k:{k}")
+        print(f"\t ste:{ste_spenet(M, k, nv=nv, seed=seed)}")
+        print(f"\t slq:{slq_spenet(M, k, step=step, nv=nv, seed=seed)}")
+        print(f"\t exact:{exact_spenet(M, k)}")
+
+    print("adjacency:")
+    M = nx.adjacency_matrix(G)
+    for k in ks:
+        print(f"k:{k}")
+        print(f"\t ste:{ste_spenet(M, k, nv=nv, seed=seed)}")
+        print(f"\t slq:{slq_spenet(M, k, step=step, nv=nv, seed=seed)}")
+        print(f"\t exact:{exact_spenet(M, k)}")
