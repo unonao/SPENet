@@ -1,11 +1,8 @@
-"""
-グラフごとの relative error を出力(数が少ないし表にするか？)
-"""
 import networkx as nx
 import numpy as np
 import numpy.linalg as LA
 import scipy
-from spenet import slq_spenet, exact_spenet
+from spenet import slq_spenet, ste_spenet, exact_spenet
 from utils import load_graph, rodger_graphs, weighted_graphs, unweighted_graphs
 import os
 import pandas as pd
@@ -19,70 +16,48 @@ def relative_error(pred, true):
     return errors
 
 
-def spe_relative_error(G, ks, s, nv, Gtype="normalized_laplacian", avg_times=10, graph_path=""):
-    """
-    return average relative error
-    """
-    np.random.seed(0)
-    errors = np.zeros((avg_times, len(ks)))
-    for i in range(avg_times):
-        approx = slq_spenet(G, ks, step=s, nv=nv, Gtype=Gtype)
-        exact = exact_spenet(G, ks, Gtype=Gtype, graph_path=graph_path)
-        error = relative_error(approx, exact)
-        errors[i, :] = error
-    return errors.mean(axis=0)
-
-
 if __name__ == "__main__":
-    # for check
-    def print_relative_error(path, ks, s, nv, is_weighted):
-        G = load_graph(path, is_weighted)
-        N = G.number_of_nodes()
-        M = G.number_of_edges()
-        Gtypes = ["normalized_laplacian", "laplacian", "adjacency"]
-        for Gtype in Gtypes:
-            print("gtype:", Gtype)
-            error = spe_relative_error(G, ks, s, nv, Gtype=Gtype, graph_path=path)
-            print(f"relative error:{error}")
-        print()
 
-    def print_error_each_graph(graphs, ks, s, nv, is_weighted):
-        for path in graphs:
-            print("path:", path)
-            print("loading graph...")
-            G = load_graph(path, is_weighted)
-            print("is bipartite:", nx.is_bipartite(G))
-            N = G.number_of_nodes()
-            M = G.number_of_edges()
-            print(f"N:{N}, M:{M}")
-            print("start")
-            Gtypes = ["normalized_laplacian", "laplacian", "adjacency"]
-            for Gtype in Gtypes:
-                print("gtype:", Gtype)
-                np.random.seed(1)
-                approx = slq_spenet(G, ks, step=s, nv=nv, Gtype=Gtype)
-                exact = exact_spenet(G, ks, Gtype=Gtype, graph_path=path, method="prod")
-                error = relative_error(approx, exact)
-                for i, k in enumerate(ks):
-                    print(f"k:{k}\tslq:{approx[i]},\texact:{exact[i]},\trelative error:{error[i]}")
-            print()
+    # print strange relative errors
 
-    ks = [2, 3, 4, 5, 6, 7]
-    s = 20
-    nv = 200
-    print(f"ks:{ks}, s{s}, nv{nv}")
+    def print_spenet_rel_error(path, is_weighted=True,  ks=[2, 3, 4, 5], step=10, nv=100, seed=1, method="prod"):
+        G = load_graph(path, is_weighted=False)
+        n = G.number_of_nodes()
+        m = G.number_of_edges()
+        print(f"path:{path}, n:{n}, m:{m}")
+
+        print("normalized laplacian:")
+        M = nx.normalized_laplacian_matrix(G)
+        for k in ks:
+            ste = ste_spenet(M, k, nv=nv, seed=seed)
+            slq = slq_spenet(M, k, step=step, nv=nv, seed=seed)
+            exact = exact_spenet(M, k, method=method)
+            print(f"k:{k}\t ste:{ste}({relative_error(ste, exact)})\t slq:{slq}({relative_error(ste, exact)})\t exact:{exact}")
+
+        print("laplacian:")
+        M = nx.laplacian_matrix(G)
+        for k in ks:
+            ste = ste_spenet(M, k, nv=nv, seed=seed)
+            slq = slq_spenet(M, k, step=step, nv=nv, seed=seed)
+            exact = exact_spenet(M, k, method=method)
+            print(f"k:{k}\t ste:{ste}({relative_error(ste, exact)})\t slq:{slq}({relative_error(ste, exact)})\t exact:{exact}")
+
+        print("adjacency:")
+        M = nx.adjacency_matrix(G)
+        for k in ks:
+            ste = ste_spenet(M, k, nv=nv, seed=seed)
+            slq = slq_spenet(M, k, step=step, nv=nv, seed=seed)
+            exact = exact_spenet(M, k, method=method)
+            print(f"k:{k}\t ste:{ste}({relative_error(ste, exact)})\t slq:{slq}({relative_error(ste, exact)})\t exact:{exact}")
 
     strange_graph = ["data/networkrepository/miscellaneous/GD96_b/GD96_b.mtx",
                      "data/networkrepository/miscellaneous/GD98_b/GD98_b.mtx",
                      "data/networkrepository/miscellaneous/GD98_c/GD98_c.mtx"]
-    print_error_each_graph(strange_graph, ks, s, nv, False)
+    is_weighted = False
+    for path in strange_graph:
+        print_spenet_rel_error(path,  is_weighted)
+
     strange_graph = ["data/networkrepository/miscellaneous/IG5-7/IG5-7.mtx"]
-    print_error_each_graph(strange_graph, ks, s, nv, True)
-    """
     is_weighted = True
-    print_error_each_graph(weighted_graphs, ks, s, nv, is_weighted)
-    is_weighted = False
-    print_error_each_graph(rodger_graphs, ks, s, nv, is_weighted)
-    is_weighted = False
-    print_error_each_graph(unweighted_graphs, ks, s, nv, is_weighted)
-    """
+    for path in strange_graph:
+        print_spenet_rel_error(path,  is_weighted)
