@@ -75,8 +75,8 @@ def exact_spenet(M, k=3, method="eig"):
 
     if method == "eig":
         e = scipy.linalg.eigvalsh(M)
-        if (e < 0).sum() > 0:
-            e[e < 0] = 0
+        if (e <= 0).sum() > 0:
+            e[e <= 0] = 0
         return np.power(e, k).sum()
     elif method == "prod":
         A = M**k

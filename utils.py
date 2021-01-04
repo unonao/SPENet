@@ -82,6 +82,14 @@ def load_graph(filepath, is_weighted=False):
     return G
 
 
+
+def relative_error(pred, true):
+    errors = np.abs((pred-true)/true)
+    return errors
+
+
+
+
 def random_vec(n, type="stdnorm"):
     """
     input:

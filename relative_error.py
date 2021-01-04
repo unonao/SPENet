@@ -3,17 +3,10 @@ import numpy as np
 import numpy.linalg as LA
 import scipy
 from spenet import slq_spenet, ste_spenet, exact_spenet
-from utils import load_graph, rodger_graphs, weighted_graphs, unweighted_graphs
+from utils import load_graph, rodger_graphs, weighted_graphs, unweighted_graphs, relative_error
 import os
 import pandas as pd
 
-
-def relative_error(pred, true):
-    """
-        If true SPE is too small, we set -1.
-    """
-    errors = np.abs((pred-true)/true)
-    return errors
 
 
 if __name__ == "__main__":
